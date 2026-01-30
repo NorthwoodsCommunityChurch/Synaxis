@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synaxis - Tally Red Play Variations</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0b;
+            color: #e8e8e8;
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            padding: 60px 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #444;
+            text-align: center;
+            margin: 70px 0 40px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 36px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .icon-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 24px;
+            background: linear-gradient(145deg, #131315 0%, #0c0c0d 100%);
+            border-radius: 18px;
+            border: 1px solid #1a1a1a;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .icon-card:hover {
+            transform: translateY(-4px);
+            border-color: #2a2a2a;
+            box-shadow: 0 24px 48px -12px rgba(0,0,0,0.5);
+        }
+
+        .icon-wrapper {
+            width: 160px;
+            height: 160px;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 14px 28px rgba(0,0,0,0.4));
+        }
+
+        .icon-wrapper svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .icon-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+
+        .icon-concept {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: center;
+        }
+
+        /* Size section */
+        .sizes-section {
+            margin-top: 80px;
+            padding: 44px;
+            background: linear-gradient(145deg, #131315 0%, #0c0c0d 100%);
+            border-radius: 20px;
+            border: 1px solid #1a1a1a;
+            max-width: 950px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .sizes-section h2 {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 36px;
+            color: #666;
+        }
+
+        .size-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .size-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .size-item span {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62rem;
+            color: #3a3a3a;
+        }
+
+        /* Comparison */
+        .comparison-section {
+            margin-top: 80px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .comparison-card {
+            padding: 36px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .comparison-card.dark {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+        }
+
+        .comparison-card.medium {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+        }
+
+        .comparison-card.light {
+            background: #e8e8e8;
+            border: 1px solid #ccc;
+        }
+
+        .comparison-card span {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .comparison-card.dark span,
+        .comparison-card.medium span {
+            color: #555;
+        }
+
+        .comparison-card.light span {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Synaxis</h1>
+        <p>Tally Red — Play Icon Variations</p>
+    </div>
+
+    <div class="section-title">Play Triangle Styles</div>
+
+    <div class="icons-grid">
+        <!-- Standard Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad1)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Play triangle -->
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+            </div>
+            <div class="icon-name">Standard</div>
+            <div class="icon-concept">Clean triangle</div>
+        </div>
+
+        <!-- Rounded Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad2)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Rounded play triangle -->
+                    <path d="M238 222 C234 220 232 222 232 228 L232 284 C232 290 234 292 238 290 L286 260 C290 258 290 254 286 252 Z" fill="#ef4444"/>
+                </svg>
+            </div>
+            <div class="icon-name">Rounded</div>
+            <div class="icon-concept">Soft corners</div>
+        </div>
+
+        <!-- Glow Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad3)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Play with glow -->
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444" filter="url(#glow)"/>
+                </svg>
+            </div>
+            <div class="icon-name">Glow</div>
+            <div class="icon-concept">Tally light glow</div>
+        </div>
+
+        <!-- Larger Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad4)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Larger play -->
+                    <path d="M228 212 L228 300 L304 256 Z" fill="#ef4444"/>
+                </svg>
+            </div>
+            <div class="icon-name">Bold</div>
+            <div class="icon-concept">Larger triangle</div>
+        </div>
+
+        <!-- Outlined Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad5)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Outlined play -->
+                    <path d="M232 218 L232 294 L296 256 Z" fill="none" stroke="#ef4444" stroke-width="6" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="icon-name">Outline</div>
+            <div class="icon-concept">Stroke only</div>
+        </div>
+
+        <!-- Gradient Play -->
+        <div class="icon-card">
+            <div class="icon-wrapper">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                        <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fca5a5"/>
+                            <stop offset="100%" style="stop-color:#dc2626"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#grad6)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <!-- Gradient play -->
+                    <path d="M232 218 L232 294 L296 256 Z" fill="url(#redGrad)"/>
+                </svg>
+            </div>
+            <div class="icon-name">Gradient</div>
+            <div class="icon-concept">Light to dark red</div>
+        </div>
+    </div>
+
+    <!-- Background comparison -->
+    <div class="section-title">Background Test</div>
+    <div class="comparison-section">
+        <div class="comparison-row">
+            <div class="comparison-card dark">
+                <svg viewBox="0 0 512 512" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gradD" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#gradD)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>Dark</span>
+            </div>
+            <div class="comparison-card medium">
+                <svg viewBox="0 0 512 512" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gradM" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#gradM)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>Medium</span>
+            </div>
+            <div class="comparison-card light">
+                <svg viewBox="0 0 512 512" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gradL" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1a1a1a"/>
+                            <stop offset="100%" style="stop-color:#0d0d0d"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="115" fill="url(#gradL)"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>Light</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Size variants -->
+    <div class="sizes-section">
+        <h2>macOS Icon Sizes</h2>
+        <div class="size-row">
+            <div class="size-item">
+                <svg viewBox="0 0 512 512" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="512" height="512" rx="115" fill="#141414"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="36" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="36" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="36" fill="none" stroke-linecap="round"/>
+                    <path d="M220 200 L220 312 L320 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>16px</span>
+            </div>
+            <div class="size-item">
+                <svg viewBox="0 0 512 512" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="512" height="512" rx="115" fill="#141414"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="32" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="32" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="32" fill="none" stroke-linecap="round"/>
+                    <path d="M228 212 L228 300 L304 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>32px</span>
+            </div>
+            <div class="size-item">
+                <svg viewBox="0 0 512 512" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="512" height="512" rx="115" fill="#141414"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>64px</span>
+            </div>
+            <div class="size-item">
+                <svg viewBox="0 0 512 512" width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="512" height="512" rx="115" fill="#141414"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>128px</span>
+            </div>
+            <div class="size-item">
+                <svg viewBox="0 0 512 512" width="256" height="256" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="512" height="512" rx="115" fill="#141414"/>
+                    <path d="M80 180 Q180 140 256 200 Q332 260 432 220" stroke="#525252" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 256 Q180 296 256 256 Q332 216 432 256" stroke="#737373" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M80 332 Q180 372 256 312 Q332 252 432 292" stroke="#404040" stroke-width="28" fill="none" stroke-linecap="round"/>
+                    <path d="M236 226 L236 286 L284 256 Z" fill="#ef4444"/>
+                </svg>
+                <span>256px</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
