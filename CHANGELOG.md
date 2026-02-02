@@ -2,6 +2,19 @@
 
 All notable changes to Synaxis will be documented in this file.
 
+## [2.2.0] - 2026-02-02
+
+### Added
+- Timeline visualization with track-based layout, ruler, clip views, and toolbar
+- Timeline track configuration with add/remove track support
+- README.md, SECURITY.md, and docs/images/ per repository standards
+
+### Changed
+- Moved repository to NorthwoodsCommunityChurch GitHub organization
+
+### Fixed
+- Removed local filesystem path from TSL5 implementation notes
+
 ## [2.1.1] - 2026-01-30
 
 ### Fixed
