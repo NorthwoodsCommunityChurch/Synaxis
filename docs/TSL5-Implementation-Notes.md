@@ -1,7 +1,6 @@
 # TSL 5.0 Implementation Notes
 
-Derived from the existing iPhone Tally app at:
-`/Users/aaronlarson/Library/CloudStorage/OneDrive-NorthwoodsCommunityChurch/VS Code/iPhone Tally/`
+Derived from the existing iPhone Tally app (separate project).
 
 ## Proven Architecture
 

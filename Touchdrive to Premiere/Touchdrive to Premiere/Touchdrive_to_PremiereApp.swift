@@ -16,6 +16,7 @@ struct SynaxisApp: App {
     @State private var assignments = AssignmentStore()
     @State private var connectionManager = ConnectionManager()
     @State private var sessionManager = SessionManager()
+    @State private var timelineLayout = TimelineLayoutStore()
 
     // MARK: - Body
 
@@ -26,6 +27,7 @@ struct SynaxisApp: App {
                 .environment(assignments)
                 .environment(connectionManager)
                 .environment(sessionManager)
+                .environment(timelineLayout)
                 .onAppear {
                     connectionManager.onEvent = { [sessionManager] event in
                         sessionManager.handleEvent(event)

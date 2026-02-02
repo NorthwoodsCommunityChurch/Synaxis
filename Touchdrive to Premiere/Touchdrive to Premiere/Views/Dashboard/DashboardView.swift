@@ -13,16 +13,51 @@ struct DashboardView: View {
     @Environment(AssignmentStore.self) private var assignments
 
     var body: some View {
-        HSplitView {
-            // MARK: Left Column — Connections, Program Source, Timecode
-            leftColumn
-                .frame(minWidth: 280, idealWidth: 340, maxWidth: 420)
+        VStack(spacing: 0) {
+            // Recording status banner (read-only — controls live in Timeline tab)
+            if sessionManager.isRecording {
+                recordingBanner
+            }
 
-            // MARK: Right Column — ProPresenter Slide, Recent Events
-            rightColumn
-                .frame(minWidth: 300)
+            HSplitView {
+                // MARK: Left Column — Connections, Program Source, Timecode
+                leftColumn
+                    .frame(minWidth: 280, idealWidth: 340, maxWidth: 420)
+
+                // MARK: Right Column — ProPresenter Slide, Recent Events
+                rightColumn
+                    .frame(minWidth: 300)
+            }
+            .padding()
         }
-        .padding()
+    }
+
+    // MARK: - Recording Status Banner
+
+    private var recordingBanner: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+
+            Text("Recording")
+                .fontWeight(.medium)
+                .foregroundStyle(.red)
+
+            if !sessionManager.sessionName.isEmpty {
+                Text(sessionManager.sessionName)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text("\(sessionManager.eventCount) events")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.08))
     }
 
     // MARK: - Left Column

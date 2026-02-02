@@ -11,6 +11,7 @@ import SwiftUI
 
 enum SidebarItem: String, Identifiable, CaseIterable {
     case dashboard
+    case timeline
     case eventLog
     case diagnostics
     case assignments
@@ -23,6 +24,7 @@ enum SidebarItem: String, Identifiable, CaseIterable {
     var label: String {
         switch self {
         case .dashboard:     return "Dashboard"
+        case .timeline:      return "Timeline"
         case .eventLog:      return "Event Log"
         case .diagnostics:   return "Diagnostics"
         case .assignments:   return "Cameras"
@@ -35,6 +37,7 @@ enum SidebarItem: String, Identifiable, CaseIterable {
     var systemImage: String {
         switch self {
         case .dashboard:     return "gauge.with.dots.needle.33percent"
+        case .timeline:      return "timeline.selection"
         case .eventLog:      return "list.bullet.rectangle"
         case .diagnostics:   return "stethoscope"
         case .assignments:   return "video"
@@ -53,7 +56,7 @@ enum SidebarItem: String, Identifiable, CaseIterable {
 
     var section: Section {
         switch self {
-        case .dashboard:
+        case .dashboard, .timeline:
             return .monitor
         case .assignments, .proPresenter, .hyperDeck:
             return .configuration
@@ -114,12 +117,9 @@ struct ContentView: View {
         Group {
             switch selectedItem {
             case .dashboard:
-                VStack(spacing: 0) {
-                    RecordingControlsView()
-                        .padding()
-                    Divider()
-                    DashboardView()
-                }
+                DashboardView()
+            case .timeline:
+                TimelineView()
             case .eventLog:
                 EventLogView()
                     .padding()
@@ -134,12 +134,7 @@ struct ContentView: View {
             case .settings:
                 SettingsView()
             case .none:
-                VStack(spacing: 0) {
-                    RecordingControlsView()
-                        .padding()
-                    Divider()
-                    DashboardView()
-                }
+                DashboardView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

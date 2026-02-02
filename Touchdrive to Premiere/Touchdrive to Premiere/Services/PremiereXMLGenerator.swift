@@ -274,7 +274,10 @@ struct PremiereXMLGenerator {
         let cuts = programCutSegments()
 
         for segment in cuts {
-            guard let camera = cameraForSourceIndex(segment.sourceIndex) else { continue }
+            // Use configured camera if available; fall back to a placeholder
+            // so cuts always appear in the XML even without camera assignments.
+            let camera = cameraForSourceIndex(segment.sourceIndex)
+                ?? CameraAssignment(tslIndex: segment.sourceIndex, name: segment.sourceName)
 
             let timelineIn = segment.startFrame + startFrameOffset
             let timelineOut = segment.endFrame + startFrameOffset
@@ -369,7 +372,8 @@ struct PremiereXMLGenerator {
         let cuts = programCutSegments()
 
         for segment in cuts {
-            guard let camera = cameraForSourceIndex(segment.sourceIndex) else { continue }
+            let camera = cameraForSourceIndex(segment.sourceIndex)
+                ?? CameraAssignment(tslIndex: segment.sourceIndex, name: segment.sourceName)
 
             let timelineIn = segment.startFrame + startFrameOffset
             let timelineOut = segment.endFrame + startFrameOffset
@@ -540,6 +544,7 @@ struct PremiereXMLGenerator {
     /// A segment representing a contiguous region on the program bus for one source.
     private struct CutSegment {
         let sourceIndex: Int
+        let sourceName: String
         let startFrame: Int
         let endFrame: Int
     }
@@ -578,6 +583,7 @@ struct PremiereXMLGenerator {
             if endFrame > startFrame {
                 segments.append(CutSegment(
                     sourceIndex: sourceIdx,
+                    sourceName: event.payload.sourceName ?? "Source \(sourceIdx)",
                     startFrame: startFrame,
                     endFrame: endFrame
                 ))

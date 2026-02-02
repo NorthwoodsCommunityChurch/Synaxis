@@ -5,8 +5,8 @@
 //  Settings scene (Cmd+,) with tabs for Connections, Project, Export, and Timecode.
 //
 
+import AppKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(SettingsManager.self) private var settings
@@ -121,7 +121,6 @@ struct ProjectSettingsTab: View {
 
 struct ExportSettingsTab: View {
     @Environment(SettingsManager.self) private var settings
-    @State private var showingFolderPicker = false
 
     var body: some View {
         @Bindable var settings = settings
@@ -133,7 +132,20 @@ struct ExportSettingsTab: View {
                         .textFieldStyle(.roundedBorder)
 
                     Button("Browse...") {
-                        showingFolderPicker = true
+                        // Defer to next run-loop iteration so SwiftUI's
+                        // button action completes before the modal runs.
+                        DispatchQueue.main.async {
+                            let panel = NSOpenPanel()
+                            panel.canChooseFiles = false
+                            panel.canChooseDirectories = true
+                            panel.allowsMultipleSelection = false
+                            panel.prompt = "Select"
+                            panel.message = "Choose a default export folder"
+                            if panel.runModal() == .OK, let url = panel.url {
+                                settings.defaultExportPath = url.path
+                                settings.save()
+                            }
+                        }
                     }
                     .buttonStyle(.bordered)
                 }
@@ -197,16 +209,6 @@ struct ExportSettingsTab: View {
             }
         }
         .formStyle(.grouped)
-        .fileImporter(
-            isPresented: $showingFolderPicker,
-            allowedContentTypes: [.folder],
-            allowsMultipleSelection: false
-        ) { result in
-            if case .success(let urls) = result, let url = urls.first {
-                settings.defaultExportPath = url.path
-                settings.save()
-            }
-        }
         .onChange(of: settings.defaultExportPath) { settings.save() }
         .onChange(of: settings.autoExportOnStop) { settings.save() }
         .onChange(of: settings.exportFileNamePattern) { settings.save() }

@@ -1,0 +1,12 @@
+# Large API specs (16K+ lines combined) — reference only, not needed for implementation
+docs/ProPresenter-Official-OpenAPI.json
+docs/ProPresenter-OpenAPI-Spec.json
+
+# Research/planning docs
+docs/switcher_to_premiere_research_plan.md
+
+# PDF reference documents
+docs/*.pdf
+
+# PRD — use CLAUDE.md for project context; read PRD.md explicitly when needed
+PRD.md

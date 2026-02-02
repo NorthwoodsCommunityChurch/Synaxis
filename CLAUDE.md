@@ -20,12 +20,21 @@ MVVM pattern with `@Observable` (Swift 5.9+):
 - **Views/** — SwiftUI views organized by feature (Dashboard, Configuration, Settings, Diagnostics, etc.)
 - **Utilities/** — Helpers (TimecodeHelpers, Logging)
 
-## Key Files
+## File Map
 
-- `ContentView.swift` — NavigationSplitView with sidebar sections (Monitor + Configuration)
-- `Touchdrive_to_PremiereApp.swift` — `@main` App struct (struct name: `SynaxisApp`)
-- `ConnectionManager.swift` — Manages all device connections, routes events to SessionManager
-- `PremiereXMLGenerator.swift` — Generates xmeml v4 XML for Adobe Premiere import
+How features flow through the code — use this to go directly to the right files:
+
+- **Cut detection**: TSLClient → ConnectionManager → SessionManager → ProductionEvent model
+- **XML/timeline export**: SessionManager → PremiereXMLGenerator
+- **HyperDeck recording control**: HyperDeckClient → ConnectionManager
+- **ProPresenter slides**: ProPresenterClient → ConnectionManager → SessionManager
+- **Camera/keyer assignments**: AssignmentStore → Views/CameraAssignmentView + Views/AssignmentsView
+- **Timeline layout UI**: TimelineLayoutStore → Views/Timeline/
+- **App settings/preferences**: SettingsManager → Views/SettingsView
+- **Dashboard/live monitor**: DashboardView (uses ConnectionManager + SessionManager)
+- **Diagnostics/debugging**: DiagnosticsView (reads from ConnectionManager)
+- **App structure/navigation**: ContentView (sidebar) → Touchdrive_to_PremiereApp (app entry)
+- **Timecode math**: Utilities/TimecodeHelpers
 
 ## Build
 
@@ -48,6 +57,11 @@ The Xcode project and directory names still reference "Touchdrive to Premiere" o
 ## Notes
 
 - The TSL listener suppresses cut events for 3 seconds after a new connection to avoid false positives from the Carbonite's initial state dump.
+- TSL bus filtering: only buses containing "PGM" or "PROGRAM" in their label emit cut events. All other buses (PVW, CLN, AUX, MiniME) are ignored to prevent false cuts.
+- TSL per-bus debouncing: 300ms `ContinuousClock`-based debounce per bus prevents duplicate cuts during video transitions.
 - HyperDeck transport is polled every 1 second as a fallback since async notifications (code 508) are unreliable.
+- HyperDeck input assignment per camera supports inputs 1-8 (matching HyperDeck Extreme 8K's SDI input count).
+- The XML generator uses fallback camera assignments for unmatched TSL source indices — no cuts are silently dropped. If a TSL source index doesn't match any configured camera, a placeholder `CameraAssignment` is created from the event data.
+- NSOpenPanel in SwiftUI Settings windows requires wrapping `runModal()` in `DispatchQueue.main.async {}` to work correctly (direct calls and `beginSheetModal` both fail silently).
 - The app icon is a pre-built `AppIcon.icns` file (not from the asset catalog) because Xcode's actool doesn't generate complete icns files for this project.
 - Multi-ProPresenter support uses a `[UUID: ProPresenterClient]` dictionary in ConnectionManager.

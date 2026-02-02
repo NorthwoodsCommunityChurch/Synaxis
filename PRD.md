@@ -37,7 +37,7 @@ This is the specific equipment the app targets:
 | Production Switcher | Ross Ultrix Carbonite | 1 | Video switching, 2 MEs + 1 MiniME |
 | Cameras | Various | 3 | Live camera sources |
 | Recorder | Blackmagic HyperDeck Extreme 8K | 1 | Records ISOs + program feed to network storage |
-| Presentation | ProPresenter 7 (v21.x) | 1 | Lyrics, scripture, announcements — feeds a keyer |
+| Presentation | ProPresenter 7 (v21.x) | 1+ | Lyrics, scripture, announcements — feeds a keyer (supports multiple machines) |
 | Edit System | Adobe Premiere v26.0 | 1 | Post-production NLE |
 
 ### HyperDeck Recording Setup
@@ -114,6 +114,8 @@ Bits 6-7: Brightness        0-3
 Example: `0:ME1PGM:In 001` = source 0, ME1 Program bus, input "In 001"
 
 Bus labels include: PGM, PV, CLN, ME1PGM, ME1PRV, ME1CLN, ME2PGM, ME2PRV, Aux 1-8, MiniME buses.
+
+**Important:** Only buses whose label contains "PGM" or "PROGRAM" represent actual director cuts. The app filters out preview, clean, aux, and other non-program bus changes to avoid false cut events. Per-bus debouncing (300ms) prevents duplicate cuts during transitions.
 
 #### Protocol Detection (TSL 5.0 vs 3.1)
 ```
@@ -236,9 +238,11 @@ Two control interfaces available:
 
 **FR-2: Source Filtering**
 - Monitor ALL TSL messages from all buses
+- Only emit program cut events from buses whose label contains "PGM" or "PROGRAM" (filters out preview, clean, aux, and MiniME buses)
+- Per-bus debounce (300ms) prevents duplicate cuts during video transitions
 - Provide UI option to configure which sources are "cameras" (map TSL source indices to camera names)
 - Filter the timeline output to only include configured camera sources
-- Allow filtering by bus (e.g., only track ME1 PGM for the program cut, not ME2 or Aux)
+- XML export uses fallback camera assignments for any unmatched TSL source indices (no cuts are silently dropped)
 
 **FR-3: ProPresenter Integration**
 - Connect via HTTP REST API to ProPresenter (TCP/IP port from Pro7 Settings > Network, no authentication for HTTP)
@@ -472,7 +476,7 @@ Two control interfaces available:
 | events | [ProductionEvent] | All captured events |
 | cameraAssignments | [CameraAssignment] | TSL index to camera mappings |
 | keyerAssignments | [KeyerAssignment] | Keyer to graphics mappings |
-| proPresenterConfig | ProPresenterConfig | ProPresenter keyer/ME assignment |
+| proPresenterConfigs | [ProPresenterConfig] | ProPresenter machine configurations (supports multiple) |
 | frameRate | Double | Project frame rate |
 | resolution | Resolution | Width x height |
 | startTimecode | String | Session start timecode |
@@ -484,7 +488,7 @@ Two control interfaces available:
 | tslIndex | Int | TSL source index (1-based) |
 | name | String | Display name (e.g., "Camera 1") |
 | fileURL | URL? | Path to ISO recording on storage server |
-| hyperDeckChannel | Int? | HyperDeck recording channel (1-4) |
+| hyperDeckChannel | Int? | HyperDeck recording input (1-8) |
 
 ### KeyerAssignment
 | Field | Type | Description |
@@ -497,6 +501,8 @@ Two control interfaces available:
 ### ProPresenterConfig
 | Field | Type | Description |
 |---|---|---|
+| id | UUID | Unique identifier for this machine |
+| name | String | Display name (e.g., "Main ProPresenter", "Lyrics Machine") |
 | host | String | ProPresenter IP address |
 | apiPort | Int | TCP/IP API port (from Pro7 Settings > Network > TCP/IP) |
 | enabled | Bool | Whether API connection is enabled |
@@ -505,6 +511,8 @@ Two control interfaces available:
 | remoteEnabled | Bool | Whether remote connection is enabled |
 | meNumber | Int | Which ME the keyer is on |
 | keyerNumber | Int | Which keyer on that ME |
+
+Multiple ProPresenter machines are supported. Each machine has its own connection, keyer assignment, and name. Events from each machine are stamped with the machine name.
 
 ---
 
@@ -587,7 +595,7 @@ Both keyer events (on/off) and ProPresenter slide changes are placed as timeline
 
 ## 11. Critical Bugs (Current Codebase)
 
-These issues were identified in the v1.0 codebase. Some are resolved by the architecture change (TSL 5.0 replacing RossTalk), others must be fixed.
+These issues were identified in the v1.0 codebase. Many are resolved by the v2.0 architecture rewrite (TSL 5.0 replacing RossTalk, split ViewModels, XMLDocument-based generator).
 
 ### P0 — Will cause crashes or data loss
 

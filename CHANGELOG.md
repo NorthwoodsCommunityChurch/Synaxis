@@ -2,6 +2,18 @@
 
 All notable changes to Synaxis will be documented in this file.
 
+## [2.1.1] - 2026-01-30
+
+### Fixed
+- TSL false cuts from non-program buses (AUX, preview, clean, MiniME) — only PGM/PROGRAM buses now emit cut events
+- TSL per-bus debouncing (300ms) prevents duplicate cuts during video transitions
+- XML export no longer silently drops cuts for unmatched TSL source indices — uses fallback camera assignments from event data
+- Export path Browse button in Settings now opens correctly (NSOpenPanel wrapped in DispatchQueue.main.async)
+
+### Changed
+- HyperDeck input picker expanded from 4 to 8 inputs with clearer "Input N" labels
+- HyperDeck picker column widened for readability
+
 ## [2.1.0] - 2026-01-30
 
 ### Changed

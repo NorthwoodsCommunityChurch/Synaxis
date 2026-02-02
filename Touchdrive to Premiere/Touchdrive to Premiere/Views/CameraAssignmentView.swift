@@ -54,18 +54,18 @@ struct CameraAssignmentRow: View {
                 handleDrop(providers: providers)
             }
 
-            // HyperDeck channel picker (optional, 1-4)
-            Picker("HD Ch", selection: Binding(
+            // HyperDeck input assignment (which ISO recording input this camera feeds)
+            Picker("HyperDeck", selection: Binding(
                 get: { camera.hyperDeckChannel ?? 0 },
                 set: { camera.hyperDeckChannel = $0 == 0 ? nil : $0 }
             )) {
                 Text("None").tag(0)
-                ForEach(1...4, id: \.self) { ch in
-                    Text("Ch \(ch)").tag(ch)
+                ForEach(1...8, id: \.self) { ch in
+                    Text("Input \(ch)").tag(ch)
                 }
             }
             .pickerStyle(.menu)
-            .frame(width: 90)
+            .frame(width: 120)
         }
         .padding(.vertical, 4)
     }

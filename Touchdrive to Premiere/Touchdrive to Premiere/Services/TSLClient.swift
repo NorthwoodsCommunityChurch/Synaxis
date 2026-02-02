@@ -59,6 +59,13 @@ final class TSLClient {
     private var suppressingCuts = false
     private var suppressionTask: Task<Void, Never>?
 
+    /// Per-bus debounce: timestamp of the last emitted cut event.
+    /// Prevents duplicate/jitter cuts during auto-transitions.
+    private var lastCutTimePerBus: [String: ContinuousClock.Instant] = [:]
+
+    /// Minimum interval between cut events on the same bus (filters transition jitter).
+    private let cutDebounceInterval: Duration = .milliseconds(300)
+
     // MARK: - Init
 
     init(busState: BusStateModel) {
@@ -117,6 +124,7 @@ final class TSLClient {
         suppressionTask?.cancel()
         suppressionTask = nil
         suppressingCuts = false
+        lastCutTimePerBus.removeAll()
         isListening = false
         isConnected = false
         lastError = nil
@@ -181,6 +189,7 @@ final class TSLClient {
         // The Carbonite sends tally for all sources on connect; without this
         // guard every source that is on-program would emit a false "cut" event.
         busState.reset()
+        lastCutTimePerBus.removeAll()
         suppressingCuts = true
         suppressionTask?.cancel()
         suppressionTask = Task { [weak self] in
@@ -471,8 +480,23 @@ final class TSLClient {
         )
 
         // Emit a programCut event when the program source on a bus changes.
-        // Suppress during the initial connection burst to avoid false cuts.
+        // Three layers of protection against false cuts:
+        //   1. Initial connection suppression (3-second window)
+        //   2. Bus name filter (only program buses, not AUX/preview/etc.)
+        //   3. Per-bus debounce (prevents jitter during auto-transitions)
         if let bus = changedBus, !suppressingCuts {
+            guard isProgramBus(bus) else {
+                Log.tsl.debug("Ignored non-program bus change: \(sourceLabel) on \(bus)")
+                return
+            }
+
+            let now = ContinuousClock.now
+            if let lastCut = lastCutTimePerBus[bus], now - lastCut < cutDebounceInterval {
+                Log.tsl.debug("Debounced cut on \(bus): \(sourceLabel) (idx \(index))")
+                return
+            }
+            lastCutTimePerBus[bus] = now
+
             let event = ProductionEvent(
                 type: .programCut,
                 payload: .programCut(
@@ -486,6 +510,16 @@ final class TSLClient {
         } else if let bus = changedBus {
             Log.tsl.debug("Suppressed initial cut: \(sourceLabel) on \(bus) (idx \(index))")
         }
+    }
+
+    // MARK: - Bus Filtering
+
+    /// Returns true if the bus label represents a program output bus.
+    /// The Carbonite sends tally for all buses (PGM, PVW, AUX, MiniME, etc.)
+    /// but only program bus changes represent actual director cuts.
+    private func isProgramBus(_ label: String) -> Bool {
+        let upper = label.uppercased()
+        return upper.contains("PGM") || upper.contains("PROGRAM")
     }
 
     // MARK: - Connection Events
