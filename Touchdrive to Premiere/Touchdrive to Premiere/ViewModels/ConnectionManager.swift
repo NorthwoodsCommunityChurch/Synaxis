@@ -14,6 +14,7 @@ final class ConnectionManager {
 
     let tslClient: TSLClient
     let hyperDeckClient: HyperDeckClient
+    let ftpServer: FTPServer
     let busState: BusStateModel
 
     /// Dictionary of ProPresenter clients keyed by their config UUID.
@@ -23,6 +24,7 @@ final class ConnectionManager {
 
     var isTSLConnected: Bool { tslClient.isListening }
     var isHyperDeckConnected: Bool { hyperDeckClient.isConnected }
+    var isFTPListening: Bool { ftpServer.isListening }
 
     /// True when at least one ProPresenter machine is connected.
     var isAnyProPresenterConnected: Bool {
@@ -56,6 +58,7 @@ final class ConnectionManager {
         self.busState = bus
         self.tslClient = TSLClient(busState: bus)
         self.hyperDeckClient = HyperDeckClient()
+        self.ftpServer = FTPServer()
 
         wireEventCallbacks()
     }
@@ -82,6 +85,11 @@ final class ConnectionManager {
             )
         }
 
+        // FTP Server
+        if settings.ftpEnabled {
+            startFTPServer(port: settings.ftpPort, settings: settings)
+        }
+
         Log.session.info("Connect all initiated")
     }
 
@@ -90,6 +98,7 @@ final class ConnectionManager {
         tslClient.stopListening()
         disconnectAllProPresenter()
         hyperDeckClient.disconnect()
+        ftpServer.stopListening()
         busState.reset()
 
         Log.session.info("Disconnect all completed")
@@ -155,6 +164,32 @@ final class ConnectionManager {
         hyperDeckClient.stop()
     }
 
+    // MARK: - FTP Server Controls
+
+    func startFTPServer(port: UInt16, settings: SettingsManager) {
+        ftpServer.updateCredentials(username: settings.ftpUsername, password: settings.ftpPassword)
+        ftpServer.baseTransferPath = settings.ftpBasePath
+
+        // Resolve security-scoped bookmark if available
+        if let bookmark = settings.ftpBasePathBookmark {
+            var isStale = false
+            if let url = try? URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &isStale) {
+                ftpServer.basePathURL = url
+                if isStale {
+                    // Re-save updated bookmark
+                    settings.ftpBasePathBookmark = try? url.bookmarkData(options: .withSecurityScope)
+                    settings.save()
+                }
+            }
+        }
+
+        ftpServer.startListening(port: port)
+    }
+
+    func stopFTPServer() {
+        ftpServer.stopListening()
+    }
+
     // MARK: - Timecode
 
     /// Current timecode from the HyperDeck (the primary timecode source).
@@ -170,6 +205,10 @@ final class ConnectionManager {
         }
 
         hyperDeckClient.onEvent = { [weak self] event in
+            self?.routeEvent(event)
+        }
+
+        ftpServer.onTransferComplete = { [weak self] event in
             self?.routeEvent(event)
         }
     }

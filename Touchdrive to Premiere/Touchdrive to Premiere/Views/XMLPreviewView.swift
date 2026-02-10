@@ -122,7 +122,7 @@ struct XMLPreviewView: View {
                 return
             }
 
-            var generator = PremiereXMLGenerator(session: productionSession)
+            var generator = PremiereXMLGenerator(session: productionSession, mediaRoot: settings.hyperDeckMediaRoot)
             trackCount = generator.trackCount
             markerCount = generator.markerCount
             xmlContent = generator.generateXML()

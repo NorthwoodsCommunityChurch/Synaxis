@@ -29,6 +29,11 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Timecode", systemImage: "timer")
                 }
+
+            UpdateSettingsTab()
+                .tabItem {
+                    Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+                }
         }
         .onDisappear {
             settings.save()
@@ -160,6 +165,35 @@ struct ExportSettingsTab: View {
             }
 
             Section {
+                HStack {
+                    TextField("HyperDeck Media Root", text: $settings.hyperDeckMediaRoot)
+                        .textFieldStyle(.roundedBorder)
+
+                    Button("Browse...") {
+                        DispatchQueue.main.async {
+                            let panel = NSOpenPanel()
+                            panel.canChooseFiles = false
+                            panel.canChooseDirectories = true
+                            panel.allowsMultipleSelection = false
+                            panel.prompt = "Select"
+                            panel.message = "Choose the HyperDeck media root folder"
+                            if panel.runModal() == .OK, let url = panel.url {
+                                settings.hyperDeckMediaRoot = url.path
+                                settings.save()
+                            }
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Text("Root folder on the HyperDeck where ISO recordings are stored. Used to build file paths in the exported XML.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("HyperDeck Media")
+            }
+
+            Section {
                 TextField("File Name Pattern", text: $settings.exportFileNamePattern)
                     .textFieldStyle(.roundedBorder)
 
@@ -210,6 +244,7 @@ struct ExportSettingsTab: View {
         }
         .formStyle(.grouped)
         .onChange(of: settings.defaultExportPath) { settings.save() }
+        .onChange(of: settings.hyperDeckMediaRoot) { settings.save() }
         .onChange(of: settings.autoExportOnStop) { settings.save() }
         .onChange(of: settings.exportFileNamePattern) { settings.save() }
     }

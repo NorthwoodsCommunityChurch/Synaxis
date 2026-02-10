@@ -14,6 +14,7 @@ struct AssignmentsView: View {
     @Environment(AssignmentStore.self) private var assignments
 
     @State private var showingSourcePicker = false
+    @State private var showingOutputPicker = false
     @State private var showingKeyerPicker = false
 
     private var statusColor: Color {
@@ -104,6 +105,106 @@ struct AssignmentsView: View {
                 Text("TSL Listener (Carbonite)")
             }
 
+            // MARK: - FTP Server
+
+            Section {
+                Toggle("Enable FTP Server", isOn: $settings.ftpEnabled)
+
+                if settings.ftpEnabled {
+                    TextField("Port", value: $settings.ftpPort, format: .number.grouping(.never))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 140)
+
+                    HStack(spacing: 12) {
+                        TextField("Username", text: $settings.ftpUsername)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 160)
+
+                        SecureField("Password", text: $settings.ftpPassword)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 160)
+                    }
+
+                    HStack {
+                        TextField("Transfer Base Path", text: $settings.ftpBasePath)
+                            .textFieldStyle(.roundedBorder)
+
+                        Button("Browse...") {
+                            DispatchQueue.main.async {
+                                let panel = NSOpenPanel()
+                                panel.canChooseFiles = false
+                                panel.canChooseDirectories = true
+                                panel.allowsMultipleSelection = false
+                                panel.message = "Choose the base folder for FTP file transfers"
+
+                                if panel.runModal() == .OK, let url = panel.url {
+                                    settings.ftpBasePath = url.path
+                                    // Store security-scoped bookmark for sandbox access
+                                    if let bookmark = try? url.bookmarkData(options: .withSecurityScope) {
+                                        settings.ftpBasePathBookmark = bookmark
+                                    }
+                                    settings.save()
+                                }
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
+                    HStack(spacing: 12) {
+                        if connections.isFTPListening {
+                            Button("Stop Server") {
+                                connections.stopFTPServer()
+                            }
+                            .buttonStyle(.bordered)
+                        } else {
+                            Button("Start Server") {
+                                settings.save()
+                                connections.startFTPServer(port: settings.ftpPort, settings: settings)
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(connections.isFTPListening ? Color.green : Color.red)
+                                .frame(width: 8, height: 8)
+                            Text(connections.isFTPListening ? "Listening" : "Stopped")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if connections.isFTPListening {
+                        let count = connections.ftpServer.activeSessionCount
+                        Text("\(count) active connection\(count == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let error = connections.ftpServer.lastError {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+
+                    Text("Files saved to: {base path}/{date}/")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text("On the Canon C200, set the FTP server to this Mac's IP and port \(settings.ftpPort) with the username and password above.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } header: {
+                Text("FTP Server (Canon C200)")
+            }
+
             // MARK: - Cameras
 
             Section {
@@ -132,6 +233,39 @@ struct AssignmentsView: View {
                     Spacer()
                     Button(action: { showingSourcePicker = true }) {
                         Label("Add Cameras", systemImage: "plus")
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+
+            // MARK: - System Outputs
+
+            Section {
+                if assignments.systemOutputs.isEmpty {
+                    Text("No system outputs assigned. Add outputs like program out, clean feed, or ME outputs.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
+                } else {
+                    ForEach($assignments.systemOutputs) { $output in
+                        HStack {
+                            CameraAssignmentRow(camera: $output)
+
+                            Button(action: { self.assignments.removeSystemOutput(id: output.id) }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.borderless)
+                            .help("Remove output")
+                        }
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("System Outputs")
+                    Spacer()
+                    Button(action: { showingOutputPicker = true }) {
+                        Label("Add Outputs", systemImage: "plus")
                     }
                     .buttonStyle(.borderless)
                 }
@@ -174,11 +308,19 @@ struct AssignmentsView: View {
         .sheet(isPresented: $showingSourcePicker) {
             CameraSourcePickerSheet()
         }
+        .sheet(isPresented: $showingOutputPicker) {
+            SystemOutputPickerSheet()
+        }
         .sheet(isPresented: $showingKeyerPicker) {
             KeyerPickerSheet()
         }
         .onChange(of: settings.tslPort) { settings.save() }
         .onChange(of: settings.tslEnabled) { settings.save() }
+        .onChange(of: settings.ftpEnabled) { settings.save() }
+        .onChange(of: settings.ftpPort) { settings.save() }
+        .onChange(of: settings.ftpBasePath) { settings.save() }
+        .onChange(of: settings.ftpUsername) { settings.save() }
+        .onChange(of: settings.ftpPassword) { settings.save() }
     }
 }
 
@@ -197,6 +339,7 @@ struct CameraSourcePickerSheet: View {
 
     private var assignedIndices: Set<Int> {
         Set(assignments.cameraAssignments.map(\.tslIndex))
+            .union(assignments.systemOutputs.map(\.tslIndex))
     }
 
     private var newSelectionCount: Int {
@@ -333,6 +476,156 @@ struct CameraSourcePickerSheet: View {
             }
             let camera = CameraAssignment(tslIndex: index, name: name)
             assignments.cameraAssignments.append(camera)
+        }
+        assignments.save()
+    }
+}
+
+// MARK: - System Output Picker Sheet
+
+struct SystemOutputPickerSheet: View {
+    @Environment(ConnectionManager.self) private var connections
+    @Environment(AssignmentStore.self) private var assignments
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var selectedIndices: Set<Int> = []
+
+    private var sortedSources: [SourceState] {
+        connections.busState.sources.values.sorted { $0.index < $1.index }
+    }
+
+    private var assignedIndices: Set<Int> {
+        Set(assignments.cameraAssignments.map(\.tslIndex))
+            .union(assignments.systemOutputs.map(\.tslIndex))
+    }
+
+    private var newSelectionCount: Int {
+        selectedIndices.subtracting(assignedIndices).count
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Add System Outputs")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding()
+
+            Divider()
+
+            if sortedSources.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+                    Text("No TSL sources available")
+                        .font(.headline)
+                    Text("Connect to TSL to discover sources from the switcher.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            } else {
+                List(sortedSources) { source in
+                    let isAssigned = assignedIndices.contains(source.index)
+                    let isSelected = selectedIndices.contains(source.index)
+
+                    HStack(spacing: 12) {
+                        if isAssigned {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        } else {
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(isSelected ? .accentColor : .secondary)
+                        }
+
+                        Circle()
+                            .fill(tallyColor(for: source))
+                            .frame(width: 8, height: 8)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(source.sourceLabel.isEmpty ? "Source \(source.index)" : source.sourceLabel)
+                                .fontWeight(isAssigned ? .medium : .regular)
+                            HStack(spacing: 8) {
+                                Text("TSL \(source.index)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                if !source.busLabel.isEmpty {
+                                    Text(source.busLabel)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+
+                        Spacer()
+
+                        if isAssigned {
+                            Text("Assigned")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard !isAssigned else { return }
+                        if isSelected {
+                            selectedIndices.remove(source.index)
+                        } else {
+                            selectedIndices.insert(source.index)
+                        }
+                    }
+                }
+                .listStyle(.plain)
+            }
+
+            Divider()
+
+            HStack {
+                Button("Add Manually") {
+                    assignments.addSystemOutput()
+                    dismiss()
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+
+                if !sortedSources.isEmpty {
+                    Button("Add \(newSelectionCount) Output\(newSelectionCount == 1 ? "" : "s")") {
+                        addSelected()
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(newSelectionCount == 0)
+                }
+            }
+            .padding()
+        }
+        .frame(minWidth: 450, idealWidth: 500, minHeight: 350, idealHeight: 450)
+    }
+
+    private func tallyColor(for source: SourceState) -> Color {
+        if source.tally.program { return .red }
+        if source.tally.preview { return .green }
+        return Color.secondary.opacity(0.3)
+    }
+
+    private func addSelected() {
+        let newIndices = selectedIndices.subtracting(assignedIndices).sorted()
+        for index in newIndices {
+            let source = connections.busState.sources[index]
+            let name: String
+            if let label = source?.sourceLabel, !label.isEmpty {
+                name = label
+            } else {
+                name = "Output \(assignments.systemOutputs.count + 1)"
+            }
+            let output = CameraAssignment(tslIndex: index, name: name)
+            assignments.systemOutputs.append(output)
         }
         assignments.save()
     }

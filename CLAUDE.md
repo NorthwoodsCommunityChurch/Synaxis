@@ -9,13 +9,14 @@ Synaxis is a macOS SwiftUI app that monitors live broadcast production equipment
 - **Ross Ultrix Carbonite** — production switcher, monitored via TSL 5.0 protocol (TCP listener, binary)
 - **ProPresenter 7** — presentation software, monitored via HTTP REST + chunked streaming
 - **Blackmagic HyperDeck Extreme 8K** — recorder, controlled via Ethernet Protocol (TCP 9993, text-based, `\r\n` terminated)
+- **Canon C200 cameras** — file transfer via embedded FTP server (cameras push MP4 files over FTP)
 
 ## Architecture
 
 MVVM pattern with `@Observable` (Swift 5.9+):
 
 - **Models/** — Data structures (ProductionEvent, ProductionSession, BusState, assignments, configs)
-- **Services/** — Network clients (TSLClient, ProPresenterClient, HyperDeckClient, EventLogger, PremiereXMLGenerator)
+- **Services/** — Network clients (TSLClient, ProPresenterClient, HyperDeckClient, FTPServer, FTPSession, EventLogger, PremiereXMLGenerator)
 - **ViewModels/** — State management (ConnectionManager, AssignmentStore, SettingsManager, SessionManager)
 - **Views/** — SwiftUI views organized by feature (Dashboard, Configuration, Settings, Diagnostics, etc.)
 - **Utilities/** — Helpers (TimecodeHelpers, Logging)
@@ -34,6 +35,7 @@ How features flow through the code — use this to go directly to the right file
 - **Dashboard/live monitor**: DashboardView (uses ConnectionManager + SessionManager)
 - **Diagnostics/debugging**: DiagnosticsView (reads from ConnectionManager)
 - **App structure/navigation**: ContentView (sidebar) → Touchdrive_to_PremiereApp (app entry)
+- **FTP file transfers**: FTPServer + FTPSession → ConnectionManager → SessionManager
 - **Timecode math**: Utilities/TimecodeHelpers
 
 ## Build
@@ -57,7 +59,7 @@ The Xcode project and directory names still reference "Touchdrive to Premiere" o
 ## Notes
 
 - The TSL listener suppresses cut events for 3 seconds after a new connection to avoid false positives from the Carbonite's initial state dump.
-- TSL bus filtering: only buses containing "PGM" or "PROGRAM" in their label emit cut events. All other buses (PVW, CLN, AUX, MiniME) are ignored to prevent false cuts.
+- TSL bus filtering: program cut events are emitted for buses containing "PGM" or "PROGRAM", or ending with "bg" (Ross Carbonite background buses like ME1bg, ME2bg). All other buses (PVW, CLN, AUX, MiniME, Pst, keyer layers) are ignored to prevent false cuts.
 - TSL per-bus debouncing: 300ms `ContinuousClock`-based debounce per bus prevents duplicate cuts during video transitions.
 - HyperDeck transport is polled every 1 second as a fallback since async notifications (code 508) are unreliable.
 - HyperDeck input assignment per camera supports inputs 1-8 (matching HyperDeck Extreme 8K's SDI input count).
@@ -65,3 +67,6 @@ The Xcode project and directory names still reference "Touchdrive to Premiere" o
 - NSOpenPanel in SwiftUI Settings windows requires wrapping `runModal()` in `DispatchQueue.main.async {}` to work correctly (direct calls and `beginSheetModal` both fail silently).
 - The app icon is a pre-built `AppIcon.icns` file (not from the asset catalog) because Xcode's actool doesn't generate complete icns files for this project.
 - Multi-ProPresenter support uses a `[UUID: ProPresenterClient]` dictionary in ConnectionManager.
+- FTP server runs on configurable port (default 2121, avoids root-required port 21). Global username/password auth. Files saved to `{base path}/{YYYY-MM-DD}/`. Uses security-scoped bookmarks for sandbox write access.
+- FTP sessions handle PASV/EPSV passive mode with ephemeral NWListener data channels. File I/O on background `DispatchQueue(qos: .utility)` to avoid blocking UI.
+- Canon C200 is the FTP client (push-only). Configure camera with Synaxis Mac IP, port, and the global FTP credentials.

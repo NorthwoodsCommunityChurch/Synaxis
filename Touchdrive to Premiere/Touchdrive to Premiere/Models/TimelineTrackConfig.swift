@@ -20,6 +20,8 @@ enum TimelineTrackSource: Codable, Equatable, Hashable {
     case graphics
     /// ProPresenter slide track for a specific machine (by ProPresenterConfig id).
     case proPresenter(configId: UUID)
+    /// ISO track for a system output (program out, clean feed, etc.) by id.
+    case systemOutput(outputId: UUID)
     /// HyperDeck recorder transport track.
     case hyperDeck
 }

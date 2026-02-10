@@ -2,6 +2,34 @@
 
 All notable changes to Synaxis will be documented in this file.
 
+## [1.0.3] - 2026-02-10
+
+### Fixed
+- TSL bus filtering now recognizes Ross Carbonite "bg" suffix buses (ME1bg, ME2bg) as program outputs — previously only buses containing "PGM" or "PROGRAM" triggered cut events, causing all camera cuts to be missed on Ross switchers using standard nomenclature
+
+## [2.3.0] - 2026-02-03
+
+### Added
+- Embedded FTP server for Canon C200 file transfers (NWListener-based, passive mode)
+- FTP session handler with full protocol state machine (USER, PASS, PASV, EPSV, STOR, LIST, CWD, MKD, etc.)
+- FTP transfer status model for tracking active/completed transfers
+- Global FTP server settings: enable toggle, port (default 2121), username, password, base transfer path
+- Security-scoped bookmark storage for FTP base path (sandbox-safe async writes)
+- FTP Server section in Cameras tab with connection status, start/stop controls, and helper text
+- FTP connection status row on Dashboard (shown only when FTP is enabled)
+- FTP transfer events (`ftpTransfer` event type) in production event log
+- Dated folder structure for FTP transfers (`{base path}/{YYYY-MM-DD}/`)
+- `Log.ftp` logging category for FTP server diagnostics
+
+### Changed
+- Camera assignment row redesigned: source name is now the primary label, TSL index shown as caption
+- Removed stepper arrows and separate name text field from camera rows
+- HyperDeck input picker given more room with explicit "HyperDeck Input:" label
+- FTP credentials are global (single username/password in FTP Server section) instead of per-camera
+
+### Removed
+- Per-camera FTP credential fields (`ftpUsername`, `ftpPassword`, `ftpDestinationPath`) from CameraAssignment model
+
 ## [2.2.0] - 2026-02-02
 
 ### Added

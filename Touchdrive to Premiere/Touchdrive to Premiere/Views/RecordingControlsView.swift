@@ -157,7 +157,7 @@ struct RecordingControlsView: View {
 
         if panel.runModal() == .OK, let url = panel.url {
             do {
-                var generator = PremiereXMLGenerator(session: productionSession)
+                var generator = PremiereXMLGenerator(session: productionSession, mediaRoot: settings.hyperDeckMediaRoot)
                 try generator.saveToFile(at: url)
                 exportError = nil
             } catch {

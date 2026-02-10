@@ -1,5 +1,5 @@
 import XCTest
-@testable import Touchdrive_to_Premiere
+@testable import Synaxis
 
 @MainActor
 final class XMLGeneratorTests: XCTestCase {
@@ -12,6 +12,7 @@ final class XMLGeneratorTests: XCTestCase {
         resolution: Resolution = .hd1080,
         events: [ProductionEvent] = [],
         cameraAssignments: [CameraAssignment] = [],
+        systemOutputs: [CameraAssignment] = [],
         keyerAssignments: [KeyerAssignment] = [],
         startTimecode: String = "01:00:00:00",
         dropFrame: Bool = true
@@ -20,6 +21,7 @@ final class XMLGeneratorTests: XCTestCase {
         session.endTime = Date().addingTimeInterval(3600)
         session.events = events
         session.cameraAssignments = cameraAssignments
+        session.systemOutputs = systemOutputs
         session.keyerAssignments = keyerAssignments
         session.frameRate = frameRate
         session.resolution = resolution
@@ -142,6 +144,58 @@ final class XMLGeneratorTests: XCTestCase {
 
         XCTAssertEqual(generator.markerCount, 0,
                        "Marker count should be 0 for a session with no keyer or slide events")
+    }
+
+    // MARK: - System Outputs
+
+    func testSystemOutputTracksInXML() {
+        let outputs = [
+            CameraAssignment(tslIndex: 10, name: "PGM Out", hyperDeckChannel: 5),
+            CameraAssignment(tslIndex: 11, name: "Clean Feed", hyperDeckChannel: 6),
+        ]
+        let session = makeSession(systemOutputs: outputs)
+        var generator = PremiereXMLGenerator(session: session)
+        let xml = generator.generateXML()
+
+        XCTAssertTrue(xml.contains("PGM Out"),
+                      "XML should contain system output name 'PGM Out'")
+        XCTAssertTrue(xml.contains("Clean Feed"),
+                      "XML should contain system output name 'Clean Feed'")
+    }
+
+    func testTrackCountIncludesSystemOutputs() {
+        let cameras = [CameraAssignment(tslIndex: 1, name: "Cam 1")]
+        let outputs = [CameraAssignment(tslIndex: 10, name: "PGM Out")]
+        let sessionWithOutputs = makeSession(cameraAssignments: cameras, systemOutputs: outputs)
+        let sessionWithoutOutputs = makeSession(cameraAssignments: cameras)
+
+        var genWith = PremiereXMLGenerator(session: sessionWithOutputs)
+        var genWithout = PremiereXMLGenerator(session: sessionWithoutOutputs)
+
+        XCTAssertGreaterThan(genWith.trackCount, genWithout.trackCount,
+                             "Track count should increase when system outputs are present")
+    }
+
+    // MARK: - Media Root
+
+    func testMediaRootPathInXML() {
+        let cameras = [CameraAssignment(tslIndex: 1, name: "Cam 1")]
+        let session = makeSession(cameraAssignments: cameras)
+        var generator = PremiereXMLGenerator(session: session, mediaRoot: "/Volumes/HyperDeck/Media")
+        let xml = generator.generateXML()
+
+        XCTAssertTrue(xml.contains("HyperDeck/Media"),
+                      "XML should contain the media root path")
+    }
+
+    func testEmptyMediaRootOmitsPathURL() {
+        let cameras = [CameraAssignment(tslIndex: 1, name: "Cam 1")]
+        let session = makeSession(cameraAssignments: cameras)
+        var generator = PremiereXMLGenerator(session: session, mediaRoot: "")
+        let xml = generator.generateXML()
+
+        XCTAssertFalse(xml.contains("<pathurl>"),
+                       "XML should not contain pathurl when media root is empty")
     }
 
     // MARK: - File Save

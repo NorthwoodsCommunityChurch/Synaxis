@@ -14,6 +14,7 @@ final class AssignmentStore {
     // MARK: - State
 
     var cameraAssignments: [CameraAssignment] = []
+    var systemOutputs: [CameraAssignment] = []
     var keyerAssignments: [KeyerAssignment] = []
     var proPresenterConfigs: [ProPresenterConfig] = []
 
@@ -48,6 +49,35 @@ final class AssignmentStore {
     func updateCamera(_ assignment: CameraAssignment) {
         if let index = cameraAssignments.firstIndex(where: { $0.id == assignment.id }) {
             cameraAssignments[index] = assignment
+            save()
+        }
+    }
+
+    // MARK: - System Output CRUD
+
+    func addSystemOutput() {
+        let nextIndex = (systemOutputs.map(\.tslIndex).max() ?? 0) + 1
+        let assignment = CameraAssignment(
+            tslIndex: nextIndex,
+            name: "Output \(systemOutputs.count + 1)"
+        )
+        systemOutputs.append(assignment)
+        save()
+    }
+
+    func removeSystemOutput(at offsets: IndexSet) {
+        systemOutputs.remove(atOffsets: offsets)
+        save()
+    }
+
+    func removeSystemOutput(id: UUID) {
+        systemOutputs.removeAll { $0.id == id }
+        save()
+    }
+
+    func updateSystemOutput(_ assignment: CameraAssignment) {
+        if let index = systemOutputs.firstIndex(where: { $0.id == assignment.id }) {
+            systemOutputs[index] = assignment
             save()
         }
     }
@@ -116,6 +146,11 @@ final class AssignmentStore {
             cameraAssignments = cameras
         }
 
+        if let data = defaults.data(forKey: Keys.systemOutputs),
+           let outputs = try? decoder.decode([CameraAssignment].self, from: data) {
+            systemOutputs = outputs
+        }
+
         if let data = defaults.data(forKey: Keys.keyerAssignments),
            let keyers = try? decoder.decode([KeyerAssignment].self, from: data) {
             keyerAssignments = keyers
@@ -137,7 +172,7 @@ final class AssignmentStore {
             Log.session.info("Migrated single ProPresenter config to multi-machine format")
         }
 
-        Log.session.info("Assignments loaded: \(self.cameraAssignments.count) cameras, \(self.keyerAssignments.count) keyers, \(self.proPresenterConfigs.count) ProPresenter machines")
+        Log.session.info("Assignments loaded: \(self.cameraAssignments.count) cameras, \(self.systemOutputs.count) outputs, \(self.keyerAssignments.count) keyers, \(self.proPresenterConfigs.count) ProPresenter machines")
     }
 
     func save() {
@@ -146,6 +181,10 @@ final class AssignmentStore {
 
         if let data = try? encoder.encode(cameraAssignments) {
             defaults.set(data, forKey: Keys.cameraAssignments)
+        }
+
+        if let data = try? encoder.encode(systemOutputs) {
+            defaults.set(data, forKey: Keys.systemOutputs)
         }
 
         if let data = try? encoder.encode(keyerAssignments) {
@@ -163,6 +202,7 @@ final class AssignmentStore {
 
     private enum Keys {
         static let cameraAssignments = "cameraAssignments_v2"
+        static let systemOutputs = "systemOutputs_v1"
         static let keyerAssignments = "keyerAssignments_v2"
         static let proPresenterConfigs = "proPresenterConfigs_v3"
         static let legacyProPresenterConfig = "proPresenterConfig_v2"

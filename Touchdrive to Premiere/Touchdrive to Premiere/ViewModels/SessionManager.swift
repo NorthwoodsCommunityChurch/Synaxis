@@ -53,6 +53,7 @@ final class SessionManager {
             timecodeSource: settings.timecodeSource,
             dropFrame: settings.dropFrame,
             cameraAssignments: assignments.cameraAssignments,
+            systemOutputs: assignments.systemOutputs,
             keyerAssignments: assignments.keyerAssignments,
             proPresenterConfigs: assignments.proPresenterConfigs
         )
@@ -130,7 +131,7 @@ final class SessionManager {
         // Premiere XML file
         let xmlURL = dirURL.appendingPathComponent(fileName + ".xml")
         do {
-            var generator = PremiereXMLGenerator(session: productionSession)
+            var generator = PremiereXMLGenerator(session: productionSession, mediaRoot: settings.hyperDeckMediaRoot)
             try generator.saveToFile(at: xmlURL)
             Log.export.info("Auto-export XML: \(xmlURL.lastPathComponent)")
         } catch {

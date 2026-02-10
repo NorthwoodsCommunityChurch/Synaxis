@@ -221,16 +221,47 @@ final class ProPresenterClient {
         async let slideResult = fetchJSON(session: session, path: "/v1/status/slide")
         async let indexResult = fetchJSON(session: session, path: "/v1/presentation/slide_index")
 
-        let slideJSON = await slideResult
-        let indexJSON = await indexResult
+        let slideFetch = await slideResult
+        let indexFetch = await indexResult
 
-        // If slide endpoint failed, count it as a poll failure.
-        guard let slideJSON else {
+        // Handle slide endpoint result.
+        switch slideFetch {
+        case .failure:
             handlePollFailure("No response from /v1/status/slide")
             return
-        }
 
-        // Reset failure count on success.
+        case .noContent:
+            // HTTP 204 = no slide active. This is valid, not a failure.
+            // Reset failure count and clear current slide state.
+            resetFailureCount()
+            if !lastSlideFingerprint.isEmpty {
+                lastSlideFingerprint = ""
+                currentPresentationName = ""
+                currentPresentationUUID = ""
+                currentSlideIndex = 0
+                currentSlideText = ""
+                currentSlideUUID = ""
+                currentSlideThumbnail = nil
+            }
+            return
+
+        case .success(let slideJSON):
+            resetFailureCount()
+
+            // Extract index JSON if available.
+            let indexJSON: [String: Any]?
+            if case .success(let json) = indexFetch {
+                indexJSON = json
+            } else {
+                indexJSON = nil
+            }
+
+            processSlideResponse(slideJSON: slideJSON, indexJSON: indexJSON)
+        }
+    }
+
+    /// Reset failure count and restore connected state if needed.
+    private func resetFailureCount() {
         if consecutiveFailures > 0 {
             consecutiveFailures = 0
             if !isConnected {
@@ -239,24 +270,37 @@ final class ProPresenterClient {
                 emitConnectionEvent(connected: true, detail: "\(host):\(port)")
             }
         }
-
-        processSlideResponse(slideJSON: slideJSON, indexJSON: indexJSON)
     }
 
-    /// Fetch a JSON endpoint, returning the parsed dictionary or nil on failure.
-    private func fetchJSON(session: URLSession, path: String) async -> [String: Any]? {
-        guard let url = buildURL(host: host, port: port, path: path) else { return nil }
+    /// Result from fetching a JSON endpoint.
+    private enum FetchResult {
+        case success([String: Any])
+        case noContent  // HTTP 204 - valid response, no data
+        case failure
+    }
+
+    /// Fetch a JSON endpoint, returning success with data, noContent for 204, or failure.
+    private func fetchJSON(session: URLSession, path: String) async -> FetchResult {
+        guard let url = buildURL(host: host, port: port, path: path) else { return .failure }
 
         do {
             let (data, response) = try await session.data(from: url)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                return nil
+            guard let http = response as? HTTPURLResponse else { return .failure }
+
+            if http.statusCode == 204 {
+                return .noContent
             }
-            return try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            guard http.statusCode == 200 else {
+                return .failure
+            }
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                return .success(json)
+            }
+            return .failure
         } catch {
-            if (error as NSError).code == NSURLErrorCancelled { return nil }
+            if (error as NSError).code == NSURLErrorCancelled { return .failure }
             Log.proPresenter.warning("Failed to fetch \(path): \(error.localizedDescription)")
-            return nil
+            return .failure
         }
     }
 

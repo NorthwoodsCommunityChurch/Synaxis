@@ -1,5 +1,5 @@
 import XCTest
-@testable import Touchdrive_to_Premiere
+@testable import Synaxis
 
 @MainActor
 final class EventLoggerTests: XCTestCase {
@@ -19,16 +19,7 @@ final class EventLoggerTests: XCTestCase {
     // MARK: - Helpers
 
     private func defaultSettings() -> SessionSettings {
-        SessionSettings(
-            frameRate: 29.97,
-            resolution: .hd1080,
-            startTimecode: "01:00:00:00",
-            timecodeSource: .hyperDeck,
-            dropFrame: true,
-            cameraAssignments: [],
-            keyerAssignments: [],
-            proPresenterConfig: ProPresenterConfig()
-        )
+        SessionSettings()
     }
 
     private func makeEvent(_ type: EventType) -> ProductionEvent {

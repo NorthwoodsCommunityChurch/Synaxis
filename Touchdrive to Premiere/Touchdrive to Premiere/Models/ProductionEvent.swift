@@ -12,6 +12,7 @@ enum EventType: String, Codable, CaseIterable {
     case recordStart
     case recordStop
     case connectionChange
+    case ftpTransfer
 
     var label: String {
         switch self {
@@ -24,6 +25,7 @@ enum EventType: String, Codable, CaseIterable {
         case .recordStart: return "Rec Start"
         case .recordStop: return "Rec Stop"
         case .connectionChange: return "Connection"
+        case .ftpTransfer: return "FTP Transfer"
         }
     }
 
@@ -38,6 +40,7 @@ enum EventType: String, Codable, CaseIterable {
         case .recordStart: return "record.circle"
         case .recordStop: return "stop.circle"
         case .connectionChange: return "network"
+        case .ftpTransfer: return "arrow.down.doc"
         }
     }
 }
@@ -54,6 +57,7 @@ enum EventPayload: Codable, Equatable {
     case recordStart(clipName: String?)
     case recordStop(clipName: String?)
     case connectionChange(service: String, connected: Bool, detail: String?)
+    case ftpTransfer(fileName: String, fileSize: Int64, destinationPath: String)
 
     var sourceIndex: Int? {
         switch self {
@@ -159,6 +163,9 @@ struct ProductionEvent: Identifiable, Codable, Equatable {
         case .connectionChange(let service, let connected, let detail):
             let state = connected ? "connected" : "disconnected"
             return "\(service) \(state)\(detail.map { " — \($0)" } ?? "")"
+        case .ftpTransfer(let file, let size, _):
+            let mb = String(format: "%.1f MB", Double(size) / (1024.0 * 1024.0))
+            return "\(file) (\(mb))"
         }
     }
 }

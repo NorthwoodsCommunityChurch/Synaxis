@@ -517,9 +517,21 @@ final class TSLClient {
     /// Returns true if the bus label represents a program output bus.
     /// The Carbonite sends tally for all buses (PGM, PVW, AUX, MiniME, etc.)
     /// but only program bus changes represent actual director cuts.
+    ///
+    /// Recognized program bus patterns:
+    /// - Contains "PGM" or "PROGRAM" (generic TSL)
+    /// - Ends with "bg" (Ross Carbonite background buses: ME1bg, ME2bg, etc.)
     private func isProgramBus(_ label: String) -> Bool {
         let upper = label.uppercased()
-        return upper.contains("PGM") || upper.contains("PROGRAM")
+        // Generic TSL: contains PGM or PROGRAM
+        if upper.contains("PGM") || upper.contains("PROGRAM") {
+            return true
+        }
+        // Ross Carbonite: background buses end with "bg" (e.g., ME1bg, ME2bg)
+        if upper.hasSuffix("BG") {
+            return true
+        }
+        return false
     }
 
     // MARK: - Connection Events

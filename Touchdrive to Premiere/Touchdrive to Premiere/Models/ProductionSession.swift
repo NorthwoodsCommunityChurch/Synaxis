@@ -7,6 +7,7 @@ struct ProductionSession: Codable, Identifiable {
     var endTime: Date?
     var events: [ProductionEvent] = []
     var cameraAssignments: [CameraAssignment] = []
+    var systemOutputs: [CameraAssignment] = []
     var keyerAssignments: [KeyerAssignment] = []
     var proPresenterConfigs: [ProPresenterConfig] = []
     var frameRate: Double = 29.97

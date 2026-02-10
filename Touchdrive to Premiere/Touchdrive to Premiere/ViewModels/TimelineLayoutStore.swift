@@ -85,16 +85,20 @@ final class TimelineLayoutStore {
         addTrack(source: .programCut, label: "Program", color: .blue)
         order += 1
 
-        // One ISO track per camera
-        let isoColors: [TrackColor] = [.cyan, .green, .orange, .yellow, .purple, .red]
-        for (i, camera) in assignments.cameraAssignments.enumerated() {
-            let color = isoColors[i % isoColors.count]
-            addTrack(source: .cameraISO(cameraId: camera.id), label: camera.name, color: color)
+        // One ISO track per camera (all cameras share cyan)
+        for camera in assignments.cameraAssignments {
+            addTrack(source: .cameraISO(cameraId: camera.id), label: camera.name, color: .cyan)
+            order += 1
+        }
+
+        // One ISO track per system output (all outputs share orange)
+        for output in assignments.systemOutputs {
+            addTrack(source: .systemOutput(outputId: output.id), label: output.name, color: .orange)
             order += 1
         }
 
         // Graphics track
-        addTrack(source: .graphics, label: "Graphics", color: .purple)
+        addTrack(source: .graphics, label: "Graphics", color: .green)
         order += 1
 
         // ProPresenter tracks
@@ -141,6 +145,11 @@ final class TimelineLayoutStore {
             case .cameraISO(let cameraId):
                 clips = computeISOClip(
                     cameraId: cameraId, session: session,
+                    sessionDurationFrames: sessionDurationFrames, isLive: session.endTime == nil
+                )
+            case .systemOutput(let outputId):
+                clips = computeSystemOutputClip(
+                    outputId: outputId, session: session,
                     sessionDurationFrames: sessionDurationFrames, isLive: session.endTime == nil
                 )
             case .graphics:
@@ -282,6 +291,30 @@ final class TimelineLayoutStore {
             sourceIndex: camera.tslIndex,
             sourceName: camera.name,
             trackSource: .cameraISO(cameraId: cameraId),
+            isLive: isLive
+        )]
+    }
+
+    // MARK: - System Output Clips
+
+    private func computeSystemOutputClip(
+        outputId: UUID,
+        session: ProductionSession,
+        sessionDurationFrames: Int,
+        isLive: Bool
+    ) -> [TimelineClip] {
+        guard let output = session.systemOutputs.first(where: { $0.id == outputId }) else {
+            return []
+        }
+        guard sessionDurationFrames > 0 else { return [] }
+
+        return [TimelineClip(
+            label: output.name,
+            startFrame: 0,
+            endFrame: sessionDurationFrames,
+            sourceIndex: output.tslIndex,
+            sourceName: output.name,
+            trackSource: .systemOutput(outputId: outputId),
             isLive: isLive
         )]
     }
@@ -557,6 +590,6 @@ final class TimelineLayoutStore {
     // MARK: - Keys
 
     private enum Keys {
-        static let timelineTracks = "timelineTracks_v1"
+        static let timelineTracks = "timelineTracks_v2"
     }
 }

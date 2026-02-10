@@ -11,6 +11,7 @@ struct DashboardView: View {
     @Environment(ConnectionManager.self) private var connectionManager
     @Environment(SessionManager.self) private var sessionManager
     @Environment(AssignmentStore.self) private var assignments
+    @Environment(SettingsManager.self) private var settings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -105,6 +106,16 @@ struct DashboardView: View {
                 isActive: connectionManager.isHyperDeckConnected,
                 detail: connectionManager.isHyperDeckConnected ? "Connected" : "Disconnected"
             )
+
+            if settings.ftpEnabled {
+                connectionRow(
+                    name: "FTP Server",
+                    isActive: connectionManager.isFTPListening,
+                    detail: connectionManager.isFTPListening
+                        ? "\(connectionManager.ftpServer.activeSessionCount) connection\(connectionManager.ftpServer.activeSessionCount == 1 ? "" : "s")"
+                        : "Stopped"
+                )
+            }
         }
         .padding()
         .background(Color(nsColor: .controlBackgroundColor))
@@ -369,6 +380,7 @@ struct DashboardView: View {
         case .recordStart:       return .red
         case .recordStop:        return .red
         case .connectionChange:  return .yellow
+        case .ftpTransfer:       return .teal
         }
     }
 }

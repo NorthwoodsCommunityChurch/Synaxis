@@ -1,6 +1,6 @@
 # Product Requirements Document: Synaxis
 
-**Version:** 2.0 (Clarified Requirements)
+**Version:** 2.3 (FTP Server, Camera Row Redesign)
 **Created:** January 29, 2026
 **Original Author:** Seth Potter
 **Platform:** macOS (SwiftUI native application)
@@ -38,6 +38,7 @@ This is the specific equipment the app targets:
 | Cameras | Various | 3 | Live camera sources |
 | Recorder | Blackmagic HyperDeck Extreme 8K | 1 | Records ISOs + program feed to network storage |
 | Presentation | ProPresenter 7 (v21.x) | 1+ | Lyrics, scripture, announcements — feeds a keyer (supports multiple machines) |
+| Cameras | Canon C200 | 3 | Live camera sources with FTP file push capability |
 | Edit System | Adobe Premiere v26.0 | 1 | Post-production NLE |
 
 ### HyperDeck Recording Setup
@@ -215,6 +216,7 @@ Two control interfaces available:
 | TSLClient | TCP (binary) | 5201 | Outbound (client) | Connects to Carbonite's TSL output for tally/bus state |
 | ProPresenterClient | HTTP REST + chunked | User-configured (TCP/IP port from Pro7 Network settings) | Outbound (client) | Monitors slide changes, presentation state |
 | HyperDeckClient | TCP (text) | 9993 | Outbound (client) | Controls recording, tracks timecode/transport |
+| FTPServer | TCP (FTP) | 2121 | Inbound (server) | Receives file uploads from Canon C200 cameras |
 | EventLogger | Internal | — | — | Aggregates events into sessions |
 | PremiereXMLGenerator | Internal | — | — | Produces xmeml v4 output |
 
@@ -264,10 +266,21 @@ Two control interfaces available:
 - Auto-populate camera file paths from matched clips
 - Automatic reconnection with exponential backoff on connection loss
 
+**FR-4b: Canon C200 FTP File Transfer**
+- Embedded FTP server using Network.framework (`NWListener`) on configurable port (default 2121)
+- Global username/password authentication (single credential set for all cameras)
+- Passive mode support (PASV and EPSV) with ephemeral data channel listeners
+- File upload via STOR command, written to `{base path}/{YYYY-MM-DD}/` with dated folder structure
+- Security-scoped bookmark for sandbox-safe file writes to user-selected base path
+- FTP transfer completion emits `ftpTransfer` production events
+- FTP protocol commands: USER, PASS, SYST, FEAT, OPTS, TYPE, PWD, CWD, CDUP, MKD, PASV, EPSV, STOR, LIST, SIZE, QUIT, NOOP
+- File I/O on background queue to avoid blocking UI during large transfers
+- Configurable in Cameras tab: enable toggle, port, username, password, base transfer path with Browse button
+
 ### 5.2 Event Capture
 
 **FR-5: Production Event Logging**
-- Capture events of types: `programCut`, `transition`, `keyerOn`, `keyerOff`, `slideChange`, `fadeToBlack`, `recordStart`, `recordStop`, `connectionChange`
+- Capture events of types: `programCut`, `transition`, `keyerOn`, `keyerOff`, `slideChange`, `fadeToBlack`, `recordStart`, `recordStop`, `connectionChange`, `ftpTransfer`
 - Timestamp each event from the timecode source (HyperDeck preferred, system clock fallback)
 - Store: source index, source name, bus name, ME number, keyer number, slide text, presentation name
 - Build a running timeline of which camera was on program at every point in time
@@ -456,7 +469,7 @@ Two control interfaces available:
 | id | UUID | Unique event identifier |
 | timestamp | Date | Capture time (from timecode source) |
 | timecode | String | Formatted timecode at event time |
-| type | EventType | programCut, transition, keyerOn, keyerOff, slideChange, fadeToBlack, recordStart, recordStop, connectionChange |
+| type | EventType | programCut, transition, keyerOn, keyerOff, slideChange, fadeToBlack, recordStart, recordStop, connectionChange, ftpTransfer |
 | sourceIndex | Int? | TSL source index |
 | sourceName | String? | Human-readable source name (from TSL label or camera assignment) |
 | busName | String? | Bus identifier (ME1PGM, ME2PVW, etc.) |
@@ -514,6 +527,16 @@ Two control interfaces available:
 
 Multiple ProPresenter machines are supported. Each machine has its own connection, keyer assignment, and name. Events from each machine are stamped with the machine name.
 
+### FTPTransferStatus
+| Field | Type | Description |
+|---|---|---|
+| id | UUID | Transfer identifier |
+| fileName | String | Name of the uploaded file |
+| bytesReceived | Int64 | Bytes received so far |
+| isComplete | Bool | Whether transfer finished successfully |
+| error | String? | Error message if transfer failed |
+| startTime | Date | When the transfer began |
+
 ---
 
 ## 8. Timeline Structure (Premiere XML Output)
@@ -559,6 +582,8 @@ Both keyer events (on/off) and ProPresenter slide changes are placed as timeline
 | ProPresenter Remote Port | (empty — user enters main Port from Pro7 Network settings) |
 | HyperDeck IP | (empty — user configures) |
 | HyperDeck Port | 9993 |
+| FTP Server Port | 2121 |
+| FTP Server | Disabled by default |
 | Frame Rate | 29.97 fps |
 | Resolution | 1920x1080 |
 | Start Timecode | 01:00:00:00 |
@@ -705,16 +730,20 @@ Synaxis/
 │   │   │   ├── CameraAssignment.swift
 │   │   │   ├── KeyerAssignment.swift
 │   │   │   ├── ProPresenterConfig.swift
+│   │   │   ├── FTPTransferStatus.swift
 │   │   │   └── AppError.swift
 │   │   ├── ViewModels/
 │   │   │   ├── ConnectionManager.swift
 │   │   │   ├── AssignmentStore.swift
 │   │   │   ├── SettingsManager.swift
-│   │   │   └── SessionManager.swift
+│   │   │   ├── SessionManager.swift
+│   │   │   └── TimelineLayoutStore.swift
 │   │   ├── Services/
 │   │   │   ├── TSLClient.swift
 │   │   │   ├── ProPresenterClient.swift
 │   │   │   ├── HyperDeckClient.swift
+│   │   │   ├── FTPServer.swift
+│   │   │   ├── FTPSession.swift
 │   │   │   ├── EventLogger.swift
 │   │   │   └── PremiereXMLGenerator.swift
 │   │   ├── Views/

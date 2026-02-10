@@ -1,5 +1,5 @@
 import XCTest
-@testable import Touchdrive_to_Premiere
+@testable import Synaxis
 
 @MainActor
 final class HyperDeckParserTests: XCTestCase {

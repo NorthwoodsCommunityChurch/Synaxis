@@ -23,6 +23,7 @@ final class EventLogger {
         session.timecodeSource = settings.timecodeSource
         session.dropFrame = settings.dropFrame
         session.cameraAssignments = settings.cameraAssignments
+        session.systemOutputs = settings.systemOutputs
         session.keyerAssignments = settings.keyerAssignments
         session.proPresenterConfigs = settings.proPresenterConfigs
         currentSession = session
@@ -118,6 +119,7 @@ struct SessionSettings {
     var timecodeSource: TimecodeSource = .hyperDeck
     var dropFrame: Bool = true
     var cameraAssignments: [CameraAssignment] = []
+    var systemOutputs: [CameraAssignment] = []
     var keyerAssignments: [KeyerAssignment] = []
     var proPresenterConfigs: [ProPresenterConfig] = []
 }

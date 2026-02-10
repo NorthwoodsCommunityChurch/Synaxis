@@ -22,6 +22,7 @@ struct PremiereXMLGenerator {
     // MARK: - Properties
 
     private let session: ProductionSession
+    private let mediaRoot: String
 
     /// Precomputed values derived from session settings.
     private let timebaseValue: Int
@@ -35,8 +36,9 @@ struct PremiereXMLGenerator {
 
     // MARK: - Initialization
 
-    init(session: ProductionSession) {
+    init(session: ProductionSession, mediaRoot: String = "") {
         self.session = session
+        self.mediaRoot = mediaRoot
         self.timebaseValue = TimecodeHelpers.timebase(for: session.frameRate)
         self.isNTSCValue = TimecodeHelpers.isNTSC(session.frameRate)
         self.useDropFrame = session.dropFrame && TimecodeHelpers.supportsDropFrame(session.frameRate)
@@ -56,10 +58,11 @@ struct PremiereXMLGenerator {
     /// The total number of video and audio tracks that will be generated.
     var trackCount: Int {
         let cameraCount = session.cameraAssignments.count
-        // V1 (program) + ISO tracks (one per camera) + graphics track
-        let videoTracks = 1 + cameraCount + 1
-        // A1 (program audio) + one audio per ISO
-        let audioTracks = 1 + cameraCount
+        let outputCount = session.systemOutputs.count
+        // V1 (program) + camera ISOs + output ISOs + graphics track
+        let videoTracks = 1 + cameraCount + outputCount + 1
+        // A1 (program audio) + audio per camera + audio per output
+        let audioTracks = 1 + cameraCount + outputCount
         return videoTracks + audioTracks
     }
 
@@ -243,7 +246,12 @@ struct PremiereXMLGenerator {
             video.addChild(buildISOTrack(camera: camera))
         }
 
-        // V(N+2): Graphics track
+        // System output ISO tracks
+        for output in session.systemOutputs {
+            video.addChild(buildISOTrack(camera: output))
+        }
+
+        // Graphics track
         video.addChild(buildGraphicsTrack())
 
         return video
@@ -261,6 +269,11 @@ struct PremiereXMLGenerator {
         // A2-A(N+1): ISO audio, one per camera
         for camera in session.cameraAssignments {
             audio.addChild(buildISOAudioTrack(camera: camera))
+        }
+
+        // System output ISO audio
+        for output in session.systemOutputs {
+            audio.addChild(buildISOAudioTrack(camera: output))
         }
 
         return audio
@@ -509,11 +522,12 @@ struct PremiereXMLGenerator {
         let fileEl = XMLElement(name: "file")
         fileEl.setAttributesWith(["id": fileId])
 
-        if let url = camera.fileURL {
-            fileEl.addChild(textElement("name", value: url.lastPathComponent))
-            fileEl.addChild(textElement("pathurl", value: url.absoluteString))
-        } else {
-            fileEl.addChild(textElement("name", value: camera.name))
+        fileEl.addChild(textElement("name", value: camera.name))
+
+        if !mediaRoot.isEmpty {
+            let rootURL = URL(fileURLWithPath: mediaRoot)
+            let fileURL = rootURL.appendingPathComponent(camera.name)
+            fileEl.addChild(textElement("pathurl", value: fileURL.absoluteString))
         }
 
         fileEl.addChild(textElement("duration", value: "\(sessionDurationFrames)"))
@@ -743,9 +757,10 @@ struct PremiereXMLGenerator {
         return parts.joined(separator: " - ")
     }
 
-    /// Find the camera assignment matching a TSL source index.
+    /// Find the camera or system output assignment matching a TSL source index.
     private func cameraForSourceIndex(_ sourceIndex: Int) -> CameraAssignment? {
         session.cameraAssignments.first(where: { $0.tslIndex == sourceIndex })
+            ?? session.systemOutputs.first(where: { $0.tslIndex == sourceIndex })
     }
 
     /// Compute a stable master clip ID for a camera.

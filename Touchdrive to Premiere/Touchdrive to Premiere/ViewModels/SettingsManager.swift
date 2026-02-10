@@ -30,9 +30,19 @@ final class SettingsManager {
     var dropFrame: Bool = true
     var timecodeSource: TimecodeSource = .hyperDeck
 
+    // MARK: - FTP Server Settings
+
+    var ftpEnabled: Bool = false
+    var ftpPort: UInt16 = 2121
+    var ftpBasePath: String = ""
+    var ftpBasePathBookmark: Data?
+    var ftpUsername: String = ""
+    var ftpPassword: String = ""
+
     // MARK: - Export Settings
 
     var defaultExportPath: String = ""
+    var hyperDeckMediaRoot: String = ""
     var autoExportOnStop: Bool = false
     var exportFileNamePattern: String = "{session}_{date}"
 
@@ -56,6 +66,7 @@ final class SettingsManager {
             Keys.dropFrame: true,
             Keys.timecodeSource: TimecodeSource.hyperDeck.rawValue,
             Keys.exportFileNamePattern: "{session}_{date}",
+            Keys.ftpPort: 2121,
         ])
     }
 
@@ -92,8 +103,18 @@ final class SettingsManager {
             timecodeSource = source
         }
 
+        // FTP Server
+        ftpEnabled = defaults.bool(forKey: Keys.ftpEnabled)
+        let ftpPortVal = defaults.integer(forKey: Keys.ftpPort)
+        ftpPort = ftpPortVal > 0 ? UInt16(clamping: ftpPortVal) : 2121
+        ftpBasePath = defaults.string(forKey: Keys.ftpBasePath) ?? ""
+        ftpBasePathBookmark = defaults.data(forKey: Keys.ftpBasePathBookmark)
+        ftpUsername = defaults.string(forKey: Keys.ftpUsername) ?? ""
+        ftpPassword = defaults.string(forKey: Keys.ftpPassword) ?? ""
+
         // Export
         defaultExportPath = defaults.string(forKey: Keys.defaultExportPath) ?? ""
+        hyperDeckMediaRoot = defaults.string(forKey: Keys.hyperDeckMediaRoot) ?? ""
         autoExportOnStop = defaults.bool(forKey: Keys.autoExportOnStop)
         exportFileNamePattern = defaults.string(forKey: Keys.exportFileNamePattern) ?? "{session}_{date}"
 
@@ -120,7 +141,15 @@ final class SettingsManager {
         defaults.set(dropFrame, forKey: Keys.dropFrame)
         defaults.set(timecodeSource.rawValue, forKey: Keys.timecodeSource)
 
+        defaults.set(ftpEnabled, forKey: Keys.ftpEnabled)
+        defaults.set(Int(ftpPort), forKey: Keys.ftpPort)
+        defaults.set(ftpBasePath, forKey: Keys.ftpBasePath)
+        defaults.set(ftpBasePathBookmark, forKey: Keys.ftpBasePathBookmark)
+        defaults.set(ftpUsername, forKey: Keys.ftpUsername)
+        defaults.set(ftpPassword, forKey: Keys.ftpPassword)
+
         defaults.set(defaultExportPath, forKey: Keys.defaultExportPath)
+        defaults.set(hyperDeckMediaRoot, forKey: Keys.hyperDeckMediaRoot)
         defaults.set(autoExportOnStop, forKey: Keys.autoExportOnStop)
         defaults.set(exportFileNamePattern, forKey: Keys.exportFileNamePattern)
 
@@ -143,7 +172,14 @@ final class SettingsManager {
         static let dropFrame = "dropFrame"
         static let timecodeSource = "timecodeSource"
         static let defaultExportPath = "defaultExportPath"
+        static let hyperDeckMediaRoot = "hyperDeckMediaRoot"
         static let autoExportOnStop = "autoExportOnStop"
         static let exportFileNamePattern = "exportFileNamePattern"
+        static let ftpEnabled = "ftpEnabled"
+        static let ftpPort = "ftpPort"
+        static let ftpBasePath = "ftpBasePath"
+        static let ftpBasePathBookmark = "ftpBasePathBookmark"
+        static let ftpUsername = "ftpUsername"
+        static let ftpPassword = "ftpPassword"
     }
 }

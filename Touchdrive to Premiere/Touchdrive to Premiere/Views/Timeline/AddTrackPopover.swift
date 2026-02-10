@@ -70,13 +70,21 @@ struct AddTrackPopover: View {
         }
 
         // Camera ISOs
-        let isoColors: [TrackColor] = [.cyan, .green, .orange, .yellow, .purple, .red]
-        for (i, camera) in assignments.cameraAssignments.enumerated() {
+        for camera in assignments.cameraAssignments {
             let source = TimelineTrackSource.cameraISO(cameraId: camera.id)
             if !layout.hasTrack(for: source) {
                 sources.append(AvailableTrackSource(
-                    source: source, label: camera.name, icon: "video",
-                    color: isoColors[i % isoColors.count]
+                    source: source, label: camera.name, icon: "video", color: .cyan
+                ))
+            }
+        }
+
+        // System Outputs
+        for output in assignments.systemOutputs {
+            let source = TimelineTrackSource.systemOutput(outputId: output.id)
+            if !layout.hasTrack(for: source) {
+                sources.append(AvailableTrackSource(
+                    source: source, label: output.name, icon: "rectangle.on.rectangle", color: .orange
                 ))
             }
         }
@@ -84,7 +92,7 @@ struct AddTrackPopover: View {
         // Graphics
         if !layout.hasTrack(for: .graphics) {
             sources.append(AvailableTrackSource(
-                source: .graphics, label: "Graphics", icon: "square.stack.3d.up.fill", color: .purple
+                source: .graphics, label: "Graphics", icon: "square.stack.3d.up.fill", color: .green
             ))
         }
 

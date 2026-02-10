@@ -678,6 +678,7 @@ struct EventDiagnosticRow: View {
         case .recordStart: return .red
         case .recordStop: return .gray
         case .connectionChange: return .yellow
+        case .ftpTransfer: return .teal
         }
     }
 }

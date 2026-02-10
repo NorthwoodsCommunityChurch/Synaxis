@@ -116,6 +116,8 @@ struct EventRow: View {
             return .gray
         case .connectionChange:
             return connectionColor
+        case .ftpTransfer:
+            return .teal
         }
     }
 
