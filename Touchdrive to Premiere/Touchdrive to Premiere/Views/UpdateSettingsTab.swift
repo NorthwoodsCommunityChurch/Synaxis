@@ -6,13 +6,15 @@
 //
 
 import SwiftUI
+import Sparkle
 
 struct UpdateSettingsTab: View {
     @Environment(UpdateManager.self) private var updateManager
 
-    var body: some View {
-        @Bindable var updateManager = updateManager
+    @State private var automaticallyChecksForUpdates: Bool = true
+    @State private var automaticallyDownloadsUpdates: Bool = false
 
+    var body: some View {
         Form {
             Section {
                 currentVersionSection
@@ -21,11 +23,17 @@ struct UpdateSettingsTab: View {
             }
 
             Section {
-                Toggle("Check for updates automatically", isOn: $updateManager.autoCheckEnabled)
+                Toggle("Check for updates automatically", isOn: $automaticallyChecksForUpdates)
+                    .onChange(of: automaticallyChecksForUpdates) { _, newValue in
+                        updateManager.updater.automaticallyChecksForUpdates = newValue
+                    }
 
-                Toggle("Include pre-release versions", isOn: $updateManager.includePreReleases)
+                Toggle("Download updates automatically", isOn: $automaticallyDownloadsUpdates)
+                    .onChange(of: automaticallyDownloadsUpdates) { _, newValue in
+                        updateManager.updater.automaticallyDownloadsUpdates = newValue
+                    }
 
-                Text("Pre-release versions may contain experimental features and bugs.")
+                Text("When automatic downloads are enabled, updates will be downloaded in the background and installed when you quit the app.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
@@ -39,6 +47,10 @@ struct UpdateSettingsTab: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear {
+            automaticallyChecksForUpdates = updateManager.updater.automaticallyChecksForUpdates
+            automaticallyDownloadsUpdates = updateManager.updater.automaticallyDownloadsUpdates
+        }
     }
 
     // MARK: - Current Version
@@ -69,101 +81,26 @@ struct UpdateSettingsTab: View {
 
     // MARK: - Update Status
 
-    @ViewBuilder
     private var updateStatusSection: some View {
-        if updateManager.isChecking {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                ProgressView()
-                    .scaleEffect(0.7)
-                Text("Checking for updates...")
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text("Synaxis is up to date")
+                Spacer()
+            }
+
+            if let lastCheck = updateManager.updater.lastUpdateCheckDate {
+                Text("Last checked: \(lastCheck, style: .relative) ago")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
-        } else if updateManager.isDownloading {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                    Text("Downloading update...")
-                }
 
-                if updateManager.downloadProgress > 0 {
-                    ProgressView(value: updateManager.downloadProgress)
-                }
+            Button("Check Now") {
+                updateManager.checkForUpdates(force: true)
             }
-        } else if updateManager.isInstalling {
-            HStack {
-                ProgressView()
-                    .scaleEffect(0.7)
-                Text("Installing update...")
-                    .foregroundStyle(.secondary)
-            }
-        } else if let update = updateManager.availableUpdate {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .foregroundStyle(.green)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Update Available: \(update.tagName)")
-                            .fontWeight(.medium)
-
-                        Text("Released \(update.publishedAt, style: .relative) ago")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-                }
-
-                if let body = update.body, !body.isEmpty {
-                    Text(body)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(5)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(nsColor: .textBackgroundColor))
-                        .cornerRadius(6)
-                }
-
-                HStack {
-                    Button("Download and Install") {
-                        updateManager.downloadAndInstallUpdate()
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    Button("Dismiss") {
-                        updateManager.dismissAvailableUpdate()
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text("Synaxis is up to date")
-                    Spacer()
-                }
-
-                if let lastCheck = updateManager.lastCheckDate {
-                    Text("Last checked: \(lastCheck, style: .relative) ago")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if let error = updateManager.lastError {
-                    Text("Error: \(error)")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-
-                Button("Check Now") {
-                    updateManager.checkForUpdates(force: true)
-                }
-                .buttonStyle(.bordered)
-            }
+            .buttonStyle(.bordered)
+            .disabled(!updateManager.canCheckForUpdates)
         }
     }
 }

@@ -46,6 +46,7 @@ struct SynaxisApp: App {
                 Button("Check for Updates...") {
                     updateManager.checkForUpdates(force: true)
                 }
+                .disabled(!updateManager.canCheckForUpdates)
                 .keyboardShortcut("U", modifiers: [.command, .shift])
             }
         }

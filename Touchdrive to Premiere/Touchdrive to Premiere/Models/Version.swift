@@ -11,7 +11,7 @@ import Foundation
 struct Version: Comparable, CustomStringConvertible, Equatable {
 
     /// Current app version. Update this when releasing new versions.
-    static let current = Version(string: "1.0.3")!
+    static let current = Version(string: "1.0.4")!
 
     let major: Int
     let minor: Int
