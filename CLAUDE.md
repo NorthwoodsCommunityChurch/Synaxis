@@ -37,6 +37,7 @@ How features flow through the code — use this to go directly to the right file
 - **App structure/navigation**: ContentView (sidebar) → Touchdrive_to_PremiereApp (app entry)
 - **FTP file transfers**: FTPServer + FTPSession → ConnectionManager → SessionManager
 - **Timecode math**: Utilities/TimecodeHelpers
+- **Version/updates**: Models/Version.swift (source of truth), ViewModels/UpdateManager, Views/UpdateSettingsTab
 
 ## Build
 
